@@ -14,7 +14,6 @@ from loguru import logger
 
 def get_steam_dir():
     if platform.system() == "Windows":
-        # On Windows, the Steam directory is usually in the Program Files folder
         program_files = Path(os.environ.get("ProgramFiles", "C:\\Program Files"))
         program_files_x86 = Path(os.environ.get("ProgramFiles(x86)", "C:\\Program Files (x86)"))
 
@@ -25,12 +24,10 @@ def get_steam_dir():
         return steam_dir
 
     elif platform.system() == "Darwin":
-        # On macOS, the Steam directory is usually in the Applications folder
         applications_dir = Path.home() / "Applications"
         return applications_dir / "Steam.app" / "Contents" / "MacOS"
 
     else:
-        # On Linux, the Steam directory is usually in the user's home directory
         home_dir = Path.home()
         return home_dir / ".steam" / "steam"
 
@@ -99,7 +96,6 @@ def download_appid_image(appid, file):
     logger.debug(dl_path)
     output_file = f"{STEAM_OUTPUT_DIR}/{file}"
 
-    #skip dl if file exists
     if os.path.isfile(output_file) or not is_downloadable(dl_path):
         return
 
