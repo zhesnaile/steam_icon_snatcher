@@ -3,30 +3,29 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
+    flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = import nixpkgs { system = "x86_64-linux"; config.allowUnfree = true; };
-        python-packages = p: with p; [
-          requests
-          vdf
-          loguru
-        ];
-        python-with-packages = pkgs.python311.withPackages(python-packages);
-      in
-      {
-        devShell = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            python-with-packages
-            steamcmd
-          ];
+  outputs = inputs@{ self, nixpkgs, flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = [ "x86_64-linux" "aarch64-linux" ];
+
+      perSystem = { config, self', inputs', pkgs, system, ... }: {
+        _module.args.pkgs = import nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+        };
+
+        devShells.default = let
+          python-packages = p: with p; [ requests vdf loguru ];
+          python-with-packages = pkgs.python311.withPackages (python-packages);
+        in pkgs.mkShell {
+          buildInputs = with pkgs; [ python-with-packages steamcmd ];
 
           shellHook = ''
             echo "Welcome to the development environment!"
           '';
         };
-      });
+      };
+    };
 }
